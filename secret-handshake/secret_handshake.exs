@@ -14,18 +14,23 @@ defmodule SecretHandshake do
 
   10000 = Reverse the order of the operations in the secret handshake
   """
+
+  @actions [
+    { 1, "wink" },
+    { 2, "double blink" },
+    { 4, "close your eyes" },
+    { 8, "jump" }
+  ]
+
   @spec commands(code :: integer) :: list(String.t())
   def commands(code) do
-    [SecretHandshake.wink, SecretHandshake.double_blink, SecretHandshake.close_your_eyes, SecretHandshake.jump]
-      |> Enum.map(fn(func) -> func.(code) end)
-      |> reverse(code)
+    @actions
+      |> Enum.map(fn(action) -> check_action(action, code) end)
       |> Enum.filter(fn(elem) -> elem != "" end)
+      |> reverse(code)
   end
 
-  def wink(),            do: fn(code) -> if (code &&& 1) == 1, do: "wink", else: "" end
-  def double_blink(),    do: fn(code) -> if (code &&& 2) == 2, do: "double blink", else: "" end
-  def close_your_eyes(), do: fn(code) -> if (code &&& 4) == 4, do: "close your eyes", else: "" end
-  def jump(),            do: fn(code) -> if (code &&& 8) == 8, do: "jump", else: "" end
+  def check_action({bits, action}, code), do: if (code &&& bits) == bits, do: action, else: ""
 
   def reverse(array, code) when (code &&& 16) == 16, do: array |> Enum.reverse
   def reverse(array, _),                             do: array
