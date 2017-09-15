@@ -12,17 +12,15 @@ defmodule RotationalCipher do
   @up_start 65
   @up_end 90
 
-  defmacro is_alphabet?(codepoint) do
-    quote do
-      (unquote(codepoint) >= @low_start and unquote(codepoint) <= @low_end) or
-      (unquote(codepoint) >= @up_start and unquote(codepoint) <= @up_end)
-    end
-  end
+  defmacro is_lower?(codepoint), do: quote do: unquote(codepoint) in @low_start..@low_end
+  defmacro is_upper?(codepoint), do: quote do: unquote(codepoint) in @up_start..@up_end
+
+  defmacro is_alphabet?(codepoint), do: quote do: is_lower?(unquote(codepoint)) or is_upper?(unquote(codepoint))
 
   defmacro overflow?(codepoint, shift) do
     quote do
-      (unquote(codepoint) >= @low_start and unquote(codepoint) <= @low_end and unquote(codepoint) + unquote(shift) > @low_end) or
-      (unquote(codepoint) >= @up_start and unquote(codepoint) <= @up_end and unquote(codepoint) + unquote(shift) > @up_end)
+      (is_lower?(unquote(codepoint)) and unquote(codepoint) + unquote(shift) > @low_end) or
+      (is_upper?(unquote(codepoint)) and unquote(codepoint) + unquote(shift) > @up_end)
     end
   end
 
