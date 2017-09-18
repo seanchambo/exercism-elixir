@@ -10,27 +10,26 @@ defmodule ProteinTranslation do
     { "Tyrosine", ["UAU", "UAC"] },
     { "STOP", ["UAA", "UAG", "UGA"] }
   ]
-
-  def split_rna(rna), do: split_rna(rna, [])
-  def split_rna("", acc), do: acc
-  def split_rna(rna, acc) do
-    { codon, tail } = rna |> String.split_at(3)
-    split_rna(tail, [of_codon(codon) | acc])
-  end
-
   @doc """
   Given an RNA string, return a list of proteins specified by codons, in order.
   """
   @spec of_rna(String.t()) :: { atom,  list(String.t()) }
-  def of_rna(rna), do: of_rna(rna, [])
-  def of_rna("", acc), do: { :ok, acc }
-  def of_rna(rna, acc) do
-    { codon, tail } = rna |> String.split_at(3)
+  def of_rna(rna) do
+    { statuses, proteins } = rna
+      |> String.to_charlist
+      |> Enum.chunk_every(3)
+      |> Enum.reduce_while([], fn(codon, acc) ->
+        case result = of_codon(codon) do
+          { :ok, "STOP"}  -> { :halt, acc }
+          { :ok, _ }      -> { :cont, acc ++ [result] }
+          { :error, _ }   -> { :halt, acc ++ [result] }
+        end
+      end)
+      |> Enum.unzip
 
-    case of_codon(codon) do
-      { :ok, "STOP" }   -> of_rna("", acc)
-      { :ok, protein }  -> of_rna(tail, acc ++ [protein] )
-      { :error, _ }     -> { :error, "invalid RNA" }
+    case :error in statuses do
+      true  -> { :error, "invalid RNA" }
+      false -> { :ok, proteins }
     end
   end
 
@@ -57,7 +56,7 @@ defmodule ProteinTranslation do
   """
   @spec of_codon(String.t()) :: { atom, String.t() }
   def of_codon(codon) do
-    case @proteins |> Enum.find(fn({_, codons}) -> codon in codons end) do
+    case Enum.find(@proteins, fn({_, codons}) -> to_string(codon) in codons end) do
       { protein, _ }  -> { :ok, protein }
       nil             -> { :error, "invalid codon" }
     end
