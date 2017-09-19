@@ -8,7 +8,8 @@ defmodule Strain do
   @spec keep(list :: list(any), fun :: ((any) -> boolean)) :: list(any)
   def keep(list, fun) do
     list
-      |> Enum.reduce([], fn (x, acc) ->  if fun.(x), do: acc ++ [x], else: acc end)
+      |> Enum.reduce([], fn (x, acc) ->  if fun.(x), do: [x | acc], else: acc end)
+      |> Enum.reverse
   end
 
   @doc """
@@ -20,6 +21,7 @@ defmodule Strain do
   @spec discard(list :: list(any), fun :: ((any) -> boolean)) :: list(any)
   def discard(list, fun) do
     list
-      |> Enum.reduce([], fn (x, acc) ->  if not fun.(x), do: acc ++ [x], else: acc end)
+      |> Enum.reduce([], fn (x, acc) ->  if not fun.(x), do: [x | acc], else: acc end)
+      |> Enum.reverse
   end
 end
